@@ -1,4 +1,4 @@
-# Antigravity OAuth Plugin for Opencode
+# Antigravity + Gemini CLI OAuth Plugin for Opencode
 
 [![npm version](https://img.shields.io/npm/v/opencode-antigravity-auth.svg)](https://www.npmjs.com/package/opencode-antigravity-auth)
 
@@ -7,8 +7,8 @@ Enable Opencode to authenticate against **Antigravity** (Google's IDE) via OAuth
 ## What you get
 
 - **Google OAuth sign-in** (multi-account via `opencode auth login`) with automatic token refresh
-- **Multi-account load balancing** Automatically cycle through multiple Google accounts to maximize rate limits
-- **Dual Gemini quota pools** Gemini models automatically fallback to a second quota pool when the first is exhausted, effectively doubling your Gemini quota per account
+- **Multi-account load balancing** Automatically cycle through multiple Google accounts to maximize throughput
+- **Two quota sources for Gemini** Automatic fallback between **Antigravity quota** and **Gemini CLI quota** (same account) before switching accounts
 - **Real-time SSE streaming** including thinking blocks and incremental output
 - **Advanced Claude support** Interleaved thinking, stable multi-turn signatures, and validated tool calling
 - **Automatic endpoint fallback** between Antigravity API endpoints (daily → autopush → prod)
@@ -265,14 +265,20 @@ The plugin supports multiple Google accounts to maximize rate limits and provide
 
 ### Dual quota pools (Gemini only)
 
-For Gemini models, the plugin can access two independent quota pools using the same Google account:
+For Gemini models, the plugin can access **two independent quota pools** using the same Google account:
 
 | Quota Pool | Headers Used | When Used |
 |------------|--------------|-----------|
-| Antigravity | Antigravity headers | Primary (tried first) |
-| Gemini CLI | Gemini CLI headers | Fallback when Antigravity is rate-limited |
+| **Antigravity** | Antigravity headers | Primary (tried first) |
+| **Gemini CLI** | Gemini CLI headers | Fallback when Antigravity is rate-limited |
 
-This effectively **doubles your Gemini quota** per account. The fallback is seamless — conversation context is preserved when switching between quota pools.
+This effectively **doubles your Gemini quota** per account. 
+
+**How it works:**
+1. Plugin tries Antigravity quota first
+2. If rate-limited (429), it automatically retries using Gemini CLI headers
+3. Only if **both** pools are exhausted does it switch to the next account
+4. This happens seamlessly — conversation context is preserved when switching between quota pools.
 
 > **Note:** Claude models only work with Antigravity headers, so this dual-pool fallback only applies to Gemini models.
 
