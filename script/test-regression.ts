@@ -398,14 +398,19 @@ async function runConcurrentTest(test: ConcurrentTest): Promise<TestResult> {
     }
   }
 
-  const failedCount = results.filter((r) => r.code !== 0).length;
+  const failedResults = results.filter((r) => r.code !== 0);
+  const failedCount = failedResults.length;
   if (failedCount > test.concurrentRequests / 2) {
     for (const sid of sessionIds) {
       await deleteSession(sid);
     }
+    const firstFailure = failedResults[0];
+    const failureDetails = firstFailure
+      ? `\n    First failure stderr: ${firstFailure.stderr.slice(0, 500)}`
+      : "";
     return {
       success: false,
-      error: `${failedCount}/${test.concurrentRequests} requests failed`,
+      error: `${failedCount}/${test.concurrentRequests} requests failed${failureDetails}`,
       duration: Date.now() - start,
       turnsCompleted: test.concurrentRequests - failedCount,
     };

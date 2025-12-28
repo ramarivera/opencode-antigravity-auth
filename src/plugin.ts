@@ -26,6 +26,7 @@ import {
 import { resolveModelWithTier } from "./plugin/transform/model-resolver";
 import {
   isEmptyResponseBody,
+  createSyntheticErrorResponse,
 } from "./plugin/request-helpers";
 import { EmptyResponseError } from "./plugin/errors";
 import { AntigravityTokenRefreshError, refreshAccessToken } from "./plugin/token";
@@ -1278,7 +1279,7 @@ export const createAntigravityPlugin = (providerId: string) => async (
                 if (!response.ok) {
                   await logResponseBody(debugContext, response, response.status);
                   
-                  // Handle 400 "Prompt too long" with helpful toast
+                  // Handle 400 "Prompt too long" with synthetic response to avoid session lock
                   if (response.status === 400) {
                     const cloned = response.clone();
                     const bodyText = await cloned.text();
@@ -1289,12 +1290,8 @@ export const createAntigravityPlugin = (providerId: string) => async (
                           "warning"
                         );
                       }
-                      // Return new response since we consumed the body
-                      return new Response(bodyText, {
-                        status: 400,
-                        statusText: response.statusText,
-                        headers: response.headers,
-                      });
+                      const errorMessage = `[Antigravity Error] Context is too long for this model.\n\nPlease use /compact to reduce context size, then retry your request.\n\nAlternatively, you can:\n- Use /clear to start fresh\n- Use /undo to remove recent messages\n- Switch to a model with larger context window`;
+                      return createSyntheticErrorResponse(errorMessage, prepared.requestedModel);
                     }
                   }
                 }
