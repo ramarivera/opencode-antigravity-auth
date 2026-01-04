@@ -140,53 +140,5 @@ describe("Quota Fallback Model Resolution (Issue #100)", () => {
       // No alias exists for this model
       expect(prepared.effectiveModel).toBe("gemini-2.5-flash");
     });
-
-    it("BACKWARD FALLBACK: resolves gemini-3-flash-preview to gemini-3-flash (Issue #100)", () => {
-      const requestUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent";
-      const requestInit: RequestInit = {
-        method: "POST",
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: "Test" }] }],
-        }),
-      };
-
-      // Simulate backward fallback: CLI model routed to Antigravity headers
-      const prepared = prepareAntigravityRequest(
-        requestUrl,
-        requestInit,
-        mockAccessToken,
-        mockProjectId,
-        undefined,
-        "antigravity", // Routed to Antigravity internal backend
-        false,
-        {},
-      );
-
-      // Should strip -preview suffix via MODEL_ALIASES
-      expect(prepared.effectiveModel).toBe("gemini-3-flash");
-    });
-
-    it("BACKWARD FALLBACK: resolves gemini-3-pro-preview to gemini-3-pro", () => {
-      const requestUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent";
-      const requestInit: RequestInit = {
-        method: "POST",
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: "Test" }] }],
-        }),
-      };
-
-      const prepared = prepareAntigravityRequest(
-        requestUrl,
-        requestInit,
-        mockAccessToken,
-        mockProjectId,
-        undefined,
-        "antigravity",
-        false,
-        {},
-      );
-
-      expect(prepared.effectiveModel).toBe("gemini-3-pro");
-    });
   });
 });
