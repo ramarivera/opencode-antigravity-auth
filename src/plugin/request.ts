@@ -58,6 +58,7 @@ import {
   isClaudeThinkingModel,
   CLAUDE_THINKING_MAX_OUTPUT_TOKENS,
 } from "./transform";
+import { applyHeaderStyleAliases } from "./quota-fallback";
 import { detectErrorType } from "./recovery";
 
 const log = createLogger("request");
@@ -622,7 +623,10 @@ export function prepareAntigravityRequest(
 
   // Use model resolver for tier-based thinking configuration
   const resolved = resolveModelWithTier(rawModel);
-  const effectiveModel = resolved.actualModel;
+  // Apply header-style aliases (Issue #100: quota fallback model resolution)
+  // When using Gemini CLI headers, convert tier-suffixed models to base models
+  // e.g., "gemini-3-pro-high" → "gemini-3-pro"
+  const effectiveModel = applyHeaderStyleAliases(resolved.actualModel, headerStyle);
 
   const streaming = rawAction === STREAM_ACTION;
   const defaultEndpoint = headerStyle === "gemini-cli" ? GEMINI_CLI_ENDPOINT : ANTIGRAVITY_ENDPOINT;
