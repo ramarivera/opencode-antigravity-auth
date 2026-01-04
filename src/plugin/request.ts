@@ -83,12 +83,6 @@ function buildSignatureSessionKey(
   return `${sessionId}:${modelKey}:${projectPart}:${conversationPart}`;
 }
 
-
-
-
-
-
-
 function shouldCacheThinkingSignatures(model?: string): boolean {
   if (typeof model !== "string") return false;
   const lower = model.toLowerCase();
@@ -996,7 +990,9 @@ export function prepareAntigravityRequest(
               };
 
               if (Array.isArray(tool.functionDeclarations) && tool.functionDeclarations.length > 0) {
-                tool.functionDeclarations.forEach((decl: any) => pushDeclaration(decl, "functionDeclarations"));
+                tool.functionDeclarations.forEach((decl: any) => {
+                  pushDeclaration(decl, "functionDeclarations");
+                });
                 return;
               }
 
@@ -1441,7 +1437,7 @@ export async function transformAntigravityResponse(
     const text = await response.text();
 
     if (!response.ok) {
-      let errorBody;
+      let errorBody: any;
       try {
         errorBody = JSON.parse(text);
       } catch {

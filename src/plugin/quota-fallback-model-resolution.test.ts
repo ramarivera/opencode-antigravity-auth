@@ -4,25 +4,8 @@ import { applyHeaderStyleAliases } from "./quota-fallback";
 import { prepareAntigravityRequest } from "./request";
 
 /**
- * Tests for GitHub Issue #100:
- * https://github.com/NoeFabris/opencode-antigravity-auth/issues/100
- * 
- * Bug: When quota_fallback is enabled and Antigravity quota is exhausted,
- * the model is resolved ONCE with the "antigravity-" prefix, which skips
- * MODEL_ALIASES. When we fall back to Gemini CLI, the model name is NOT
- * re-resolved, causing 500 errors.
- * 
- * Root Cause:
- * 1. URL: /models/antigravity-gemini-3-pro-high:streamGenerateContent
- * 2. resolveModelWithTier("antigravity-gemini-3-pro-high")
- *    → Returns "gemini-3-pro-high" (alias SKIPPED because of prefix)
- * 3. Antigravity quota exhausted → headerStyle changes to "gemini-cli"
- * 4. BUG: effectiveModel stays "gemini-3-pro-high" (not re-resolved!)
- * 5. Gemini CLI doesn't recognize "gemini-3-pro-high" → 500 error
- * 
- * Expected Fix:
- * When using Gemini CLI headers, apply MODEL_ALIASES to convert
- * "gemini-3-pro-high" → "gemini-3-pro"
+ * Tests for Quota Fallback Model Resolution (Issue #100).
+ * Ensures that model aliases are applied correctly when falling back from Antigravity to Gemini CLI.
  */
 describe("Quota Fallback Model Resolution (Issue #100)", () => {
   describe("Unit Tests: applyHeaderStyleAliases()", () => {
@@ -61,15 +44,7 @@ describe("Quota Fallback Model Resolution (Issue #100)", () => {
     const mockAccessToken = "test-access-token";
     const mockProjectId = "test-project-id";
 
-    /**
-     * This test FAILS until the fix is integrated into prepareAntigravityRequest.
-     * 
-     * It simulates the full flow:
-     * 1. Request for antigravity-gemini-3-pro-high
-     * 2. Using "gemini-cli" headerStyle (after quota fallback)
-     * 3. Expects effectiveModel to be "gemini-3-pro" (alias applied)
-     */
-    it("FAILS: prepareAntigravityRequest should apply alias when using gemini-cli", () => {
+    it("applies alias when using gemini-cli in prepareAntigravityRequest", () => {
       const requestUrl = "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3-pro-high:generateContent";
       const requestInit: RequestInit = {
         method: "POST",
@@ -92,11 +67,10 @@ describe("Quota Fallback Model Resolution (Issue #100)", () => {
       );
 
       // EXPECTED: effectiveModel should be "gemini-3-pro" (alias applied)
-      // ACTUAL (BUG): effectiveModel is "gemini-3-pro-high" (alias NOT applied)
       expect(prepared.effectiveModel).toBe("gemini-3-pro");
     });
 
-    it("FAILS: prepareAntigravityRequest should handle gemini-3-flash-high", () => {
+    it("handles gemini-3-flash-high in prepareAntigravityRequest", () => {
       const requestUrl = "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3-flash-high:streamGenerateContent";
       const requestInit: RequestInit = {
         method: "POST",
