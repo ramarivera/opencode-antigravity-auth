@@ -11,7 +11,7 @@ describe("Quota Fallback Model Resolution (Issue #100)", () => {
   describe("Unit Tests: applyHeaderStyleAliases()", () => {
     it("applies alias when headerStyle is gemini-cli", () => {
       const result = applyHeaderStyleAliases("gemini-3-pro-high", "gemini-cli");
-      expect(result).toBe("gemini-3-pro");
+      expect(result).toBe("gemini-3-pro-preview");
     });
 
     it("keeps model unchanged when headerStyle is antigravity", () => {
@@ -21,12 +21,17 @@ describe("Quota Fallback Model Resolution (Issue #100)", () => {
 
     it("handles gemini-3-flash-high with gemini-cli", () => {
       const result = applyHeaderStyleAliases("gemini-3-flash-high", "gemini-cli");
-      expect(result).toBe("gemini-3-flash");
+      expect(result).toBe("gemini-3-flash-preview");
     });
 
     it("handles gemini-3-pro-low with gemini-cli", () => {
       const result = applyHeaderStyleAliases("gemini-3-pro-low", "gemini-cli");
-      expect(result).toBe("gemini-3-pro");
+      expect(result).toBe("gemini-3-pro-preview");
+    });
+
+    it("preserves gemini-3-pro-preview with gemini-cli", () => {
+      const result = applyHeaderStyleAliases("gemini-3-pro-preview", "gemini-cli");
+      expect(result).toBe("gemini-3-pro-preview");
     });
 
     it("handles models without aliases gracefully", () => {
@@ -66,8 +71,8 @@ describe("Quota Fallback Model Resolution (Issue #100)", () => {
         { claudeToolHardening: false },
       );
 
-      // EXPECTED: effectiveModel should be "gemini-3-pro" (alias applied)
-      expect(prepared.effectiveModel).toBe("gemini-3-pro");
+      // EXPECTED: effectiveModel should be the CLI preview model
+      expect(prepared.effectiveModel).toBe("gemini-3-pro-preview");
     });
 
     it("handles gemini-3-flash-high in prepareAntigravityRequest", () => {
@@ -90,7 +95,7 @@ describe("Quota Fallback Model Resolution (Issue #100)", () => {
         {},
       );
 
-      expect(prepared.effectiveModel).toBe("gemini-3-flash");
+      expect(prepared.effectiveModel).toBe("gemini-3-flash-preview");
     });
 
     it("prepareAntigravityRequest should NOT apply alias when using antigravity", () => {
